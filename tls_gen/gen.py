@@ -168,43 +168,48 @@ def generate_client_certificate_and_key_pair(opts, **kwargs):
 def generate_leaf_certificate_and_key_pair(peer, opts,
                                            parent_certificate_path = root_ca_certificate_path(),
                                            parent_key_path         = root_ca_key_path(),
-                                           parent_certs_path       = root_ca_certs_path()):
+                                           parent_certs_path       = root_ca_certs_path(),
+                                           name=None):
     print("Will generate leaf certificate and key pair for {}".format(peer))
     print("Using {} for Common Name (CN)".format(opts.common_name))
 
     print("Using parent certificate path at {}".format(parent_certificate_path))
     print("Using parent key path at {}".format(parent_key_path))
-    os.makedirs(relative_path(peer), exist_ok = True)
+    if name is None:
+        name = peer
+    os.makedirs(relative_path(name), exist_ok = True)
 
     if opts.use_ecc:
         print("Will use Elliptic Curve Cryptography...")
-        openssl_ecparam("-out", leaf_key_path(peer), "-genkey", "-name", opts.ecc_curve)
+        openssl_ecparam("-out", leaf_key_path(name), "-genkey", "-name",
+                        opts.ecc_curve)
     else:
         print("Will use RSA...")
-        openssl_genrsa("-out", leaf_key_path(peer), str(opts.key_bits))
+        openssl_genrsa("-out", leaf_key_path(name), str(opts.key_bits))
 
     openssl_req(opts,
                 "-new",
-                "-key",     leaf_key_path(peer),
-                "-keyout",  leaf_certificate_path(peer),
-                "-out",     relative_path(peer, "req.pem"),
+                "-key",     leaf_key_path(name),
+                "-keyout",  leaf_certificate_path(name),
+                "-out",     relative_path(name, "req.pem"),
                 "-days",    str(opts.validity_days),
                 "-outform", "PEM",
-                "-subj",    "/CN={}/O={}/L=$$$$/".format(opts.common_name, peer),
+                "-subj",    "/CN={}/O={}/L=$$$$/".format(opts.common_name,
+                                                         name),
                 "-nodes")
     openssl_ca(opts,
                "-days",    str(opts.validity_days),
                "-cert",    parent_certificate_path,
                "-keyfile", parent_key_path,
-               "-in",      relative_path(peer, "req.pem"),
-               "-out",     leaf_certificate_path(peer),
+               "-in",      relative_path(name, "req.pem"),
+               "-out",     leaf_certificate_path(name),
                "-outdir",  parent_certs_path,
                "-notext",
                "-batch",
                "-extensions", "{}_extensions".format(peer))
     run(["openssl", "pkcs12",
           "-export",
-          "-out",     relative_path(peer, "keycert.p12"),
-          "-in",      leaf_certificate_path(peer),
-          "-inkey",   leaf_key_path(peer),
+          "-out",     relative_path(name, "keycert.p12"),
+          "-in",      leaf_certificate_path(name),
+          "-inkey",   leaf_key_path(name),
           "-passout", "pass:{}".format(opts.password)])

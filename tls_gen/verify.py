@@ -6,6 +6,8 @@ from .paths import *
 
 def verify_leaf_certificate_against_root_ca(peer):
     print("Will verify {} certificate against root CA".format(peer))
+    print(result_root_ca_certificate_path())
+    print(result_leaf_certificate_path(peer))
     call(["openssl", "verify",
           "-CAfile", result_root_ca_certificate_path(),
           result_leaf_certificate_path(peer)])

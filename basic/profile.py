@@ -20,6 +20,18 @@ def generate(opts):
     _copy_artifacts_to_results()
     print("Done! Find generated certificates and private keys under ./result!")
 
+
+def generate_client(opts):
+    print("OPTS\n\n")
+    print(opts)
+    print("\n\n")
+    name = opts.common_name
+    print(
+        "Will generate client certificate with name {}".format(name))
+    gen.generate_client_certificate_and_key_pair(opts, name=name)
+    gen.copy_leaf_certificate_and_key_pair(name)
+    verify.verify_leaf_certificate_against_root_ca(name)
+
 def clean(opts):
     for s in [paths.root_ca_path(),
               paths.result_path(),
@@ -58,7 +70,8 @@ commands = {"generate":   generate,
             "regen":      regenerate,
             "verify":     verify,
             "verify-pkcs12": verify_pkcs12,
-            "info":       info}
+            "info":       info,
+            "client":     generate_client}
 
 if __name__ == "__main__":
     sys.path.append("..")

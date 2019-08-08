@@ -33,6 +33,10 @@ def build_parser():
 def dispatch_command(commands, parser, args, options):
     try:
         cmd = args[0]
+        if cmd == "client-cert":
+            if not options.CN:
+                print("CN should be passed for client-cert generation")
+                exit(1)
         fn  = commands[cmd]
 
         fn(options)

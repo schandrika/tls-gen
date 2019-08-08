@@ -6,8 +6,21 @@ ifndef PYTHON
 PYTHON := python3
 endif
 
+ifeq ($(MAKECMDGOALS),client-cert)
+
 ifndef CN
+$(error   "Please add option.. CN=<name> to run target client-cert")
+endif
+rootdir = $(realpath .)
+
+ifneq ("$(wildcard $(rootdir)/testca/cacert.pem)","")
+$(info  Will use ca cert $(rootdir)/testca/cacert.pem to sign the client cert)
+else
+$(error "Please run make to generate ca certificate before running make client-cert")
+endif
+
 CN := $(shell hostname)
+
 endif
 
 ifndef CLIENT_ALT_NAME
@@ -61,6 +74,13 @@ regen:
 	--common-name $(CN) \
 	--client-alt-name $(CLIENT_ALT_NAME) \
 	--server-alt-name $(SERVER_ALT_NAME) \
+	--days-of-validity $(DAYS_OF_VALIDITY) \
+	--key-bits $(NUMBER_OF_PRIVATE_KEY_BITS) $(ECC_FLAGS)
+
+client-cert:
+	$(PYTHON) profile.py client --password $(PASS) \
+	--common-name $(CN) \
+	--client-alt-name $(CLIENT_ALT_NAME) \
 	--days-of-validity $(DAYS_OF_VALIDITY) \
 	--key-bits $(NUMBER_OF_PRIVATE_KEY_BITS) $(ECC_FLAGS)
 
