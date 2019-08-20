@@ -6,21 +6,22 @@ ifndef PYTHON
 PYTHON := python3
 endif
 
-ifeq ($(MAKECMDGOALS),client-cert)
 
 ifndef CN
-$(error   "Please add option.. CN=<name> to run target client-cert")
-endif
-rootdir = $(realpath .)
-
-ifneq ("$(wildcard $(rootdir)/testca/cacert.pem)","")
-$(info  Will use ca cert $(rootdir)/testca/cacert.pem to sign the client cert)
-else
-$(error "Please run make to generate ca certificate before running make client-cert")
+  ifeq ($(MAKECMDGOALS),client-cert)
+    $(error   "Please add option.. CN=<name> to run target client-cert")
+  else
+    CN := $(shell hostname)
+  endif
 endif
 
-CN := $(shell hostname)
-
+ifeq ($(MAKECMDGOALS),client-cert)
+  rootdir = $(realpath .)
+  ifneq ("$(wildcard $(rootdir)/testca/cacert.pem)","")
+    $(info  Will use ca cert $(rootdir)/testca/cacert.pem to sign the client cert)
+  else
+    $(error "Please run make to generate ca certificate before running make client-cert")
+  endif
 endif
 
 ifndef CLIENT_ALT_NAME
